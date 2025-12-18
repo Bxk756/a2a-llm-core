@@ -1,9 +1,5 @@
-# Core ML
-torch>=2.1.0
-
-# Utilities
-numpy>=1.24
-tqdm>=4.66
-
-# Optional (nice to have, lightweight)
-sentencepiece>=0.2.0
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+fastapi
+uvicorn
+pydantic
