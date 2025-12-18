@@ -1,0 +1,38 @@
+version: 1
+policies:
+
+  - id: PRIV_ESC_001
+    name: Privilege Escalation Attempt
+    description: Detects attempts to gain unauthorized privileges
+    match:
+      any:
+        - contains: "privilege escalation"
+        - contains: "root access"
+        - contains: "sudo"
+        - contains: "admin access"
+    action: ESCALATE
+    severity: critical
+    notify: true
+
+  - id: DATA_EXFIL_001
+    name: Data Exfiltration Attempt
+    description: Detects suspicious data extraction behavior
+    match:
+      any:
+        - contains: "exfiltrate"
+        - contains: "dump database"
+        - contains: "export all records"
+    action: BLOCK
+    severity: high
+    notify: true
+
+  - id: NORMAL_001
+    name: Normal Request
+    description: Default allow policy
+    match:
+      any:
+        - contains: "status"
+        - contains: "health"
+    action: ALLOW
+    severity: low
+    notify: false
