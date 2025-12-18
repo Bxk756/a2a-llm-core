@@ -1,68 +1,29 @@
-import json
-from collections import Counter
+import re
 
 
-class CharTokenizer:
+class WordTokenizer:
     """
-    Simple character-level tokenizer.
-    Designed for from-scratch LLM training.
+    Simple word-level tokenizer.
+    Splits on whitespace and punctuation.
     """
 
     def __init__(self, text: str):
-        chars = sorted(list(set(text)))
-        self.vocab_size = len(chars)
+        tokens = self._tokenize(text)
+        self.vocab = sorted(set(tokens))
+        self.stoi = {t: i for i, t in enumerate(self.vocab)}
+        self.itos = {i: t for t, i in self.stoi.items()}
 
-        self.stoi = {ch: i for i, ch in enumerate(chars)}
-        self.itos = {i: ch for i, ch in enumerate(chars)}
+    def _tokenize(self, text: str):
+        # keep punctuation as separate tokens
+        return re.findall(r"\w+|[^\w\s]", text)
 
-    def encode(self, s: str):
-        """
-        Encode a string into a list of token IDs.
-        """
-        return [self.stoi[c] for c in s]
+    def encode(self, text: str):
+        tokens = self._tokenize(text)
+        return [self.stoi[t] for t in tokens if t in self.stoi]
 
-    def decode(self, tokens):
-        """
-        Decode a list of token IDs back into a string.
-        """
-        return "".join(self.itos[t] for t in tokens)
+    def decode(self, ids):
+        return " ".join(self.itos[i] for i in ids)
 
-    def save(self, path: str):
-        """
-        Save tokenizer to disk.
-        """
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(
-                {
-                    "stoi": self.stoi,
-                    "itos": self.itos,
-                    "vocab_size": self.vocab_size,
-                },
-                f,
-                ensure_ascii=False,
-                indent=2,
-            )
-
-    @classmethod
-    def load(cls, path: str):
-        """
-        Load tokenizer from disk.
-        """
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        tokenizer = cls.__new__(cls)
-        tokenizer.stoi = data["stoi"]
-        tokenizer.itos = {int(k): v for k, v in data["itos"].items()}
-        tokenizer.vocab_size = data["vocab_size"]
-        return tokenizer
-
-
-def build_tokenizer_from_file(path: str):
-    """
-    Utility function to build a tokenizer from a text file.
-    """
-    with open(path, "r", encoding="utf-8") as f:
-        text = f.read()
-
-    return CharTokenizer(text)
+    @property
+    def vocab_size(self):
+        return len(self.vocab)
