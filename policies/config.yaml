@@ -1,0 +1,16 @@
+version: 1
+
+# audit = never block, only observe
+# enforce = allow real BLOCK / ESCALATE
+mode: enforce
+
+enabled_packs:
+  - process
+  - network
+  # - persistence   # disabled by default
+
+decision_thresholds:
+  allow_max: 29
+  log_max: 69
+  escalate_max: 89
+  block_min: 90

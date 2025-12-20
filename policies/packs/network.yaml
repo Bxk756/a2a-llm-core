@@ -1,0 +1,31 @@
+version: 1
+pack: network
+
+rules:
+  - id: NET001_public_rdp
+    when:
+      all:
+        - field: network.dst_port
+          equals: 3389
+        - field: network.direction
+          equals: inbound
+        - field: network.src_ip
+          not_in_cidr: ["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"]
+    severity: high
+    points: 40
+    action: ESCALATE
+    reason: "Inbound RDP from external IP"
+
+  - id: NET002_high_integrity_shell_outbound
+    when:
+      all:
+        - field: process.integrity
+          any_of: ["HIGH","SYSTEM"]
+        - field: process.name
+          any_of: ["powershell.exe","pwsh.exe","cmd.exe"]
+        - field: network.dst_port
+          any_of: [80,443,8080]
+    severity: critical
+    points: 60
+    action: BLOCK
+    reason: "High integrity shell making outbound web connections"

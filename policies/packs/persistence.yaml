@@ -1,0 +1,25 @@
+version: 1
+pack: persistence
+
+rules:
+  - id: REG001_runkey
+    when:
+      all:
+        - field: registry.path
+          contains_any: ["\\software\\microsoft\\windows\\currentversion\\run"]
+    severity: high
+    points: 30
+    action: ESCALATE
+    reason: "Run key persistence detected"
+
+  - id: TASK001_schtasks
+    when:
+      all:
+        - field: process.name
+          equals: "schtasks.exe"
+        - field: process.cmdline
+          contains_any: ["/create","/sc","/tn"]
+    severity: high
+    points: 30
+    action: ESCALATE
+    reason: "Scheduled task persistence detected"

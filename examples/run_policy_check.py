@@ -1,14 +1,21 @@
 import json
-from a2a.policy_engine.engine import PolicyEngine, load_policy
+from a2a.policy_engine.engine import PolicyEngine
 from a2a.policy_engine.mapper import load_mapping, map_event
+from a2a.policy_engine.loader import load_policy_with_packs
+
 
 def main():
-    policy = load_policy("policies/base.yaml")
+    # 🔥 LOAD POLICY VIA PACKS + CONFIG (THIS WAS THE MISSING PIECE)
+    policy = load_policy_with_packs(
+        config_path="policies/config.yaml",
+        packs_dir="policies/packs",
+    )
+
     engine = PolicyEngine(policy)
 
     mapping = load_mapping("mappings/sentinelone.yaml")
 
-    # Example raw SentinelOne-ish event (you can replace with real telemetry)
+    # Example SentinelOne-like event
     raw = {
         "timestamp": "2025-12-18T00:00:00Z",
         "event_type": "process",
@@ -28,18 +35,23 @@ def main():
     event = map_event(raw, mapping, event_type="process")
     result = engine.evaluate(event)
 
-    # Print normalized event + decision
     print("NORMALIZED_EVENT:")
     print(json.dumps(event, indent=2))
 
     print("\nDECISION:")
     print(json.dumps(result, indent=2))
 
-    # Your action-token output format
     print("\nACTION_OUTPUT:")
+    print(f"MODE: {result['mode']}")
     print(f"RISK_SCORE: {result['risk_score']}")
-    print(f"FINDINGS: {', '.join(result['findings']) if result['findings'] else 'none'}")
+    print(
+        f"FINDINGS: {', '.join(result['findings']) if result['findings'] else 'none'}"
+    )
     print(f"ACTION : {result['action']}")
+
+    if result["mode"] == "audit":
+        print(f"ENFORCEMENT_ACTION : {result['enforcement_action']}")
+
 
 if __name__ == "__main__":
     main()

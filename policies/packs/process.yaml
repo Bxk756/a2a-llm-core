@@ -1,0 +1,27 @@
+version: 1
+pack: process
+
+rules:
+  - id: PROC001_powershell_encoded_or_iex
+    when:
+      all:
+        - field: process.name
+          any_of: ["powershell.exe", "pwsh.exe"]
+        - field: process.cmdline
+          contains_any: ["-enc", "encodedcommand", "iex", "invoke-expression"]
+    severity: high
+    points: 35
+    action: ESCALATE
+    reason: "PowerShell encoded / IEX execution pattern"
+
+  - id: PROC002_office_spawns_shell
+    when:
+      all:
+        - field: process.parent_name
+          any_of: ["winword.exe", "excel.exe", "powerpnt.exe", "outlook.exe"]
+        - field: process.name
+          any_of: ["cmd.exe", "powershell.exe", "pwsh.exe"]
+    severity: high
+    points: 35
+    action: ESCALATE
+    reason: "Office spawning shell"
