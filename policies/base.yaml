@@ -1,0 +1,182 @@
+version: 1
+
+decision_thresholds:
+  allow_max: 29
+  log_max: 69
+  escalate_max: 89
+  block_min: 90
+
+rules:
+  # --- Process / LOLBins ---
+  - id: PROC001_powershell_encoded_or_iex
+    when:
+      all:
+        - field: process.name
+          any_of: ["powershell.exe", "pwsh.exe"]
+        - field: process.cmdline
+          contains_any: ["-enc", "encodedcommand", "iex", "invoke-expression"]
+    severity: high
+    points: 35
+    action: ESCALATE
+    reason: "PowerShell with encoded / IEX execution pattern"
+
+  - id: PROC002_office_spawns_shell
+    when:
+      all:
+        - field: process.parent_name
+          any_of: ["winword.exe", "excel.exe", "powerpnt.exe", "outlook.exe"]
+        - field: process.name
+          any_of: ["cmd.exe", "powershell.exe", "pwsh.exe", "wscript.exe", "cscript.exe"]
+    severity: high
+    points: 35
+    action: ESCALATE
+    reason: "Office spawning shell/script interpreter"
+
+  - id: PROC003_rundll32_suspicious
+    when:
+      all:
+        - field: process.name
+          any_of: ["rundll32.exe"]
+        - field: process.cmdline
+          contains_any: ["javascript:", "vbscript:", "url.dll", "shell32.dll", "scrobj.dll"]
+    severity: high
+    points: 30
+    action: ESCALATE
+    reason: "Suspicious rundll32 execution pattern"
+
+  - id: PROC004_unsigned_temp_exec
+    when:
+      all:
+        - field: process.path
+          contains_any: ["\\appdata\\local\\temp\\", "\\windows\\temp\\", "/tmp/"]
+        - field: file.signed_status
+          any_of: ["UNSIGNED", "UNKNOWN", ""]
+    severity: medium
+    points: 20
+    action: LOG
+    reason: "Unsigned/unknown binary executed from temp location"
+
+  # --- Persistence ---
+  - id: REG001_runkey_persistence
+    when:
+      all:
+        - field: registry.path
+          contains_any: ["\\software\\microsoft\\windows\\currentversion\\run", "\\software\\microsoft\\windows\\currentversion\\runonce"]
+    severity: high
+    points: 30
+    action: ESCALATE
+    reason: "Run/RunOnce persistence registry path accessed"
+
+  - id: TASK001_schtasks_creation
+    when:
+      all:
+        - field: process.name
+          any_of: ["schtasks.exe"]
+        - field: process.cmdline
+          contains_any: ["/create", "/sc", "/tn", "/tr"]
+    severity: high
+    points: 30
+    action: ESCALATE
+    reason: "Scheduled task creation pattern"
+
+  # --- Network / Ports (from your ports cheat sheet) ---
+  - id: NET001_public_rdp_inbound
+    when:
+      all:
+        - field: network.dst_port
+          equals: 3389
+        - field: network.direction
+          equals: inbound
+        - field: network.src_ip
+          not_in_cidr: ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+    severity: high
+    points: 40
+    action: ESCALATE
+    reason: "Inbound RDP from external IP"
+
+  - id: NET002_public_smb_inbound
+    when:
+      all:
+        - field: network.dst_port
+          equals: 445
+        - field: network.direction
+          equals: inbound
+        - field: network.src_ip
+          not_in_cidr: ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+    severity: critical
+    points: 60
+    action: BLOCK
+    reason: "Inbound SMB from external IP (high risk exposure)"
+
+  - id: NET003_public_db_ports_inbound
+    when:
+      all:
+        - field: network.dst_port
+          any_of: [3306, 5432]
+        - field: network.direction
+          equals: inbound
+        - field: network.src_ip
+          not_in_cidr: ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+    severity: critical
+    points: 60
+    action: BLOCK
+    reason: "Inbound database port from external IP"
+
+  - id: NET004_legacy_protocol_usage
+    when:
+      any:
+        - field: network.dst_port
+          any_of: [20, 21, 110, 143, 137, 138, 139]
+        - field: network.src_port
+          any_of: [20, 21, 110, 143, 137, 138, 139]
+    severity: medium
+    points: 15
+    action: LOG
+    reason: "Legacy protocol usage observed (FTP/POP3/IMAP/NetBIOS)"
+
+  - id: NET005_suspicious_tld_outbound
+    when:
+      all:
+        - field: network.url
+          regex: "https?://.*\\.(top|xyz|ru|cn)(/|$)"
+    severity: high
+    points: 30
+    action: ESCALATE
+    reason: "Outbound traffic to suspicious TLD"
+
+  - id: NET006_high_integrity_shell_outbound_web
+    when:
+      all:
+        - field: process.integrity
+          any_of: ["HIGH", "SYSTEM"]
+        - field: process.name
+          any_of: ["powershell.exe", "pwsh.exe", "cmd.exe", "wscript.exe", "cscript.exe"]
+        - field: network.dst_port
+          any_of: [80, 443, 8080]
+    severity: critical
+    points: 60
+    action: BLOCK
+    reason: "High integrity shell/script making outbound web connections"
+
+  # --- Basic hygiene rules (roadmap fundamentals turned into policy) ---
+  - id: AUTH001_missing_user_context
+    when:
+      all:
+        - field: process.user
+          exists: false
+    severity: low
+    points: 5
+    action: LOG
+    reason: "Missing user context on process event"
+
+  - id: META001_missing_source_or_type
+    when:
+      any:
+        - field: meta.source
+          exists: false
+        - field: meta.event_type
+          exists: false
+    severity: low
+    points: 5
+    action: LOG
+    reason: "Event missing meta.source or meta.event_type"

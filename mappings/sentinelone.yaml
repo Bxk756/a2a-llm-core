@@ -1,0 +1,62 @@
+version: 1
+source: sentinelone
+field_map:
+  # HOST / AGENT INFO
+  AgentName: host.name
+  AgentOS: host.os
+  AgentVersion: host.agent_version
+  SiteId: host.site_id
+  SiteName: host.site_name
+  AccountId: host.account_id
+  AccountName: host.account_name
+  DNSRequest: network.dns
+
+  # PROCESS TREE
+  ProcessId: process.pid
+  ParentProcessId: process.ppid
+  ParentProcessName: process.parent_name
+  ParentProcessStartTime: process.parent_start_time
+  ParentProcessUniqueKey: process.parent_unique_key
+  ProcessCmd: process.cmdline
+  ProcessDisplayName: process.display_name
+  ProcessGroupId: process.group_id
+  ProcessImagePath: process.path
+  ProcessImageSha1Hash: process.sha1
+  ProcessIntegrityLevel: process.integrity
+  ProcessName: process.name
+  ProcessSessionId: process.session_id
+  ProcessStartTime: process.start_time
+  ProcessSubSystem: process.subsystem
+  ProcessUniqueKey: process.unique_key
+  Rpid: process.rpid
+  Tid: process.tid
+  TrueContext: process.true_context
+  User: process.user
+
+  # FILE / REGISTRY INTEGRITY
+  FileID: file.id
+  FileFullName: file.path
+  FileCreateAt: file.created_at
+  FileMD5: file.md5
+  FileModifyAt: file.modified_at
+  FileSHA1: file.sha1
+  FileSHA256: file.sha256
+  OldFileSHA1: file.old_sha1
+  OldFileName: file.old_name
+  Publisher: file.publisher
+  SignedStatus: file.signed_status
+  VerifiedStatus: file.verified_status
+  WhyNotVerified: file.why_not_verified
+  RegistryID: registry.id
+  RegistryKey: registry.key
+  RegistryPath: registry.path
+
+  # NETWORK DATA
+  NetworkMethod: network.method
+  NetworkUrl: network.url
+  DNSResponse: network.dns_response
+  DstIP: network.dst_ip
+  DstPort: network.dst_port
+  SrcIP: network.src_ip
+  SrcPort: network.src_port
+  Source: network.source
