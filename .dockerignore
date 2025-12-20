@@ -1,17 +1,27 @@
 .git
 .gitignore
+
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-checkpoints/
-logs/
-memory.db
-
-.env
-.env.*
-venv/
 .venv/
+env/
+venv/
+
+checkpoints/
+memory.db
+logs/
+audit.csv
 
 node_modules/
+dist/
+build/
+
+.DS_Store
+EOF
+from
+if
+return
+}
