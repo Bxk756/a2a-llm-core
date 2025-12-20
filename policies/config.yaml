@@ -2,11 +2,11 @@ version: 1
 
 # audit = never block, only observe
 # enforce = allow real BLOCK / ESCALATE
-mode: enforce
+mode: audit
 
 enabled_packs:
   - process
-  - network
+  # - network
   # - persistence   # disabled by default
 
 decision_thresholds:
