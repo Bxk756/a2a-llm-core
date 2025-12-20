@@ -1,0 +1,17 @@
+.git
+.gitignore
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+checkpoints/
+logs/
+memory.db
+
+.env
+.env.*
+venv/
+.venv/
+
+node_modules/
